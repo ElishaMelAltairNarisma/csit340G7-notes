@@ -6,6 +6,8 @@ const API_URL = import.meta.env.VITE_API_URL
 
 function Notes() {
   const [notes, setNotes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [form, setForm] = useState(() => {
       const savedDraft = localStorage.getItem('draft')
       return savedDraft ? JSON.parse(savedDraft) : { title: '', body: '' }
@@ -15,10 +17,19 @@ function Notes() {
   const titleRef = useRef(null)
 
     useEffect(() => {
+        let ignore = false
         async function loadNotes() {
-      const res = await fetch(API_URL + '/notes')
-      const data = await res.json()
-      setNotes(data)
+      try {
+        const res = await fetch(API_URL + '/notes')
+        if (!res.ok) {
+          throw new Error('The server answered ' + res.status)
+        }
+        const data = await res.json()
+        if (!ignore) setNotes(data)
+      } catch (err) {
+        if (!ignore) setError(err.message)
+      }
+      if (!ignore) setLoading(false)
     }
  
     loadNotes()
@@ -134,7 +145,9 @@ const handleDelete = useCallback((id) => {
                     </li>
                 ))}    
             </ul>
-            {visibleNotes.length === 0 && (
+            {loading && <p className="text-lg text-[#949494]">Loading notes...</p>}
+            {error && <p className="text-lg text-[#b83f45]">{error}</p>}
+            {!loading && !error && visibleNotes.length === 0 && (
                 <p className="text-lg text-[#949494]">No notes found</p>
             )}
         </section>
