@@ -83,9 +83,26 @@ async function handleSubmit(e) {
     }
   }
  
-const handleDelete = useCallback((id) => {
-    setNotes(notes.filter((todo) => todo.id !== id))
-}, [notes])
+
+const handleDelete = useCallback(async (id) => {
+    try {
+      const res = await fetch(API_URL + '/notes/' + id, {
+        method: 'DELETE',
+      })
+
+      if (!res.ok) {
+        throw new Error('The server answered ' + res.status)
+      }
+
+      setNotes((prevNotes) =>
+        prevNotes.filter((note) => note.id !== id)
+      )
+      setError('')
+    } catch (err) {
+      setError(err.message)
+    }
+}, [])
+
  
   return (
     <div className="grid min-h-screen grid-cols-[420px_1fr]">
